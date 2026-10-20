@@ -1,7 +1,7 @@
 
 # Anteproyecto: Cook-List
 
-**Módulo:** Proyecto Intermodular (0379 · PIDW2) — 2.º DAW Virtual  
+**Módulo:** Proyecto Intermodular (0379 · PIDW2) — 2.º DAW
 **Centro:** CIFP Avilés (Curso 2026/2027)  
 **Autor/a:** Mabel Zarate Espíritu  
 **Repositorio GitHub:** https://github.com/MabelZar/daw-proyecto-cook-list 
@@ -65,11 +65,16 @@ La aplicación se utilizará desde un navegador web, permitiendo gestionar recet
 
 ## 3. Modelo de datos
 
-- **Diagrama Entidad-Relación en 3FN:** pendiente de elaborar y guardar en `docs/der.md`.
-- **Relación 1:N:** un usuario podrá tener varios platos propios; cada plato podrá tener varios ingredientes asociados mediante sus registros de detalle.
-- **Relación M:N con atributos:** los platos se relacionarán con los ingredientes mediante una entidad intermedia, por ejemplo `DetallePlato`, que almacenará atributos como la cantidad, la unidad de medida y la referencia de raciones. Asimismo, los menús semanales podrán relacionarse con los platos mediante una entidad de planificación que permita guardar el día y la comida correspondiente.
+- **Diagrama Entidad-Relación en 3FN:** 
+   [Ver diagrama Entidad-Relación](docs/der.md)
+   
+- **Relación 1:N:**
+  - `ROLES → USERS`: un rol puede estar asignado a varios usuarios y cada usuario tiene un único rol.
+  - `USERS → RECIPES`: un usuario puede crear varias recetas y cada receta pertenece a un único usuario.
+  - `CATEGORY → RECIPES`: una categoría puede clasificar varias recetas y cada receta pertenece a una categoría.
 
-El modelo definitivo se concretará durante el diseño de la base de datos, procurando evitar redundancias y cumplir con la tercera forma normal (3FN).
+- **Relación M:N con atributos:** 
+  - `RECIPES ↔ INGREDIENTS` mediante la tabla intermedia `RECIPE_INGREDIENTS(recipe_id, ingredient_id, quantity)`: una receta puede contener varios ingredientes y un ingrediente puede utilizarse en varias recetas. La tabla intermedia almacena la cantidad utilizada de cada ingrediente.
 
 ---
 
@@ -81,9 +86,8 @@ El modelo definitivo se concretará durante el diseño de la base de datos, proc
 - **Frontend:** React.js con HTML, CSS y JavaScript. React permitirá construir una interfaz dinámica mediante componentes reutilizables; CSS se utilizará para definir la presentación visual.
 - **Construcción del backend:** Maven para gestionar dependencias y automatizar las tareas de compilación.
 - **Pruebas de API:** Postman para probar los endpoints y comprobar las respuestas de la API REST.
-- **Entorno de desarrollo:** Eclipse para el desarrollo del backend y Visual Studio Code para el trabajo con el frontend y los archivos del proyecto.
-- **Comunicación entre frontend y backend:** el frontend realizará peticiones HTTP a la API REST de Spring Boot, que gestionará la lógica de negocio y el acceso a PostgreSQL.
-- **Alojamiento cloud previsto:** pendiente de seleccionar. Se valorará una plataforma compatible con el despliegue del backend Spring Boot, la aplicación React y la base de datos PostgreSQL.
+- **Entorno de desarrollo:** Visual Studio Code para el trabajo con el frontend y los archivos del proyecto.
+- **Alojamiento cloud previsto:**  Railway por su facilidad de uso, su integración con GitHub y la posibilidad de alojar el backend de Spring Boot y la base de datos PostgreSQL en una misma plataforma
 
 ---
 
