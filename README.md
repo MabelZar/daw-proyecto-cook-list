@@ -45,7 +45,8 @@ Los pasos de instalación, configuración y ejecución se documentarán cuando e
 - **Acceso a datos:** Spring Data JPA / Hibernate.
 - **Gestión de dependencias:** Maven.
 - **Pruebas de API:** Postman.
-- **Entorno de desarrollo:** Visual Studio Code
+- **Entorno de desarrollo:** Visual Studio Code.
+- **Despliegue:** Railway.
 
 ---
 
@@ -89,7 +90,6 @@ Las pruebas de los endpoints, las validaciones y las respuestas HTTP se realizar
 ## ✒️ Notas Adicionales
 
 - **Estado:** Spring 1 (Hito 1).
-- **Despliegue:** pendiente de definir.
 - **Conversión automática entre unidades:** fuera del alcance inicial del MVP.
 - **Compartir listas mediante WhatsApp:** fuera del alcance inicial del MVP.
 - **Posibles complementos:** 

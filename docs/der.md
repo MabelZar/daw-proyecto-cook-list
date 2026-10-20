@@ -4,7 +4,7 @@
 **Proyecto:** Cook-List  
 **Módulo:** Proyecto Intermodular (0379 · PIDW2) — 2.º DAW
 **Centro:** CIFP Avilés — Curso 2026/2027  
-**Autor/a:** Mabel Zarate Espíritu
+**Autor/a:** Mabel Zárate Espíritu
 
 ## 1. Diagrama Entidad-Relación
 
