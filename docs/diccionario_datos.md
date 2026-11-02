@@ -1,0 +1,101 @@
+# Diccionario de datos — Cook-List
+
+Este documento describe las tablas, campos, tipos de datos, claves, restricciones y finalidad de cada atributo de la base de datos de Cook-List.
+
+## 1. ROLES
+
+Almacena los roles disponibles en la aplicación.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| id | BIGINT | No | PK, autoincremental | Identificador único del rol. |
+| name | VARCHAR(100) | No | UNIQUE | Nombre del rol. |
+
+## 2. USERS
+
+Almacena los usuarios registrados en la aplicación.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| id | BIGINT | No | PK, autoincremental | Identificador único del usuario. |
+| name | VARCHAR(150) | No | — | Nombre del usuario. |
+| email | VARCHAR(255) | No | UNIQUE | Correo electrónico del usuario. |
+| password_hash | VARCHAR(255) | No | — | Contraseña almacenada mediante un hash seguro. |
+| family_size | INTEGER | No | CHECK (family_size > 0) | Número de personas de la unidad familiar. |
+| birth_date | DATE | Sí | — | Fecha de nacimiento del usuario. |
+| active | BOOLEAN | No | DEFAULT TRUE | Indica si la cuenta está activa. |
+| role_id | BIGINT | No | FK → ROLES(id), ON DELETE RESTRICT | Rol asignado al usuario. |
+
+## 3. CATEGORY
+
+Almacena las categorías en las que se clasifican las recetas.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| id | BIGINT | No | PK, autoincremental | Identificador único de la categoría. |
+| name | VARCHAR(100) | No | UNIQUE | Nombre de la categoría. |
+
+## 4. UNITS
+
+Almacena las unidades de medida utilizadas por los ingredientes.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| id | BIGINT | No | PK, autoincremental | Identificador único de la unidad. |
+| name | VARCHAR(100) | No | UNIQUE | Nombre de la unidad de medida. |
+| symbol | VARCHAR(20) | No | — | Símbolo o abreviatura de la unidad. |
+
+## 5. INGREDIENTS
+
+Almacena los ingredientes que pueden utilizarse en las recetas.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| id | BIGINT | No | PK, autoincremental | Identificador único del ingrediente. |
+| name | VARCHAR(150) | No | UNIQUE | Nombre del ingrediente. |
+| unit_id | BIGINT | No | FK → UNITS(id), ON DELETE RESTRICT | Unidad de medida asociada al ingrediente. |
+
+## 6. RECIPES
+
+Almacena las recetas creadas por los usuarios.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| id | BIGINT | No | PK, autoincremental | Identificador único de la receta. |
+| user_id | BIGINT | No | FK → USERS(id), ON DELETE RESTRICT | Usuario que ha creado la receta. |
+| category_id | BIGINT | No | FK → CATEGORY(id), ON DELETE RESTRICT | Categoría a la que pertenece la receta. |
+| name | VARCHAR(150) | No | — | Nombre de la receta. |
+| description | TEXT | Sí | — | Descripción de la receta. |
+| preparation_minutes | INTEGER | No | CHECK (preparation_minutes > 0) | Tiempo de preparación expresado en minutos. |
+
+## 7. RECIPE_INGREDIENTS
+
+Tabla intermedia que representa la relación muchos a muchos entre recetas e ingredientes. También almacena la cantidad necesaria de cada ingrediente para una receta.
+
+| Campo | Tipo SQL | Nulo | Clave / restricciones | Descripción |
+|---|---|---|---|---|
+| recipe_id | BIGINT | No | PK compuesta, FK → RECIPES(id), ON DELETE CASCADE | Receta a la que pertenece el ingrediente. |
+| ingredient_id | BIGINT | No | PK compuesta, FK → INGREDIENTS(id), ON DELETE RESTRICT | Ingrediente utilizado en la receta. |
+| quantity | NUMERIC(10,2) | No | CHECK (quantity > 0) | Cantidad del ingrediente necesaria para la receta. |
+
+La clave primaria compuesta está formada por los campos `recipe_id` e `ingredient_id`. De esta forma, un mismo ingrediente no puede aparecer repetido en una misma receta.
+
+## 8. Criterios de integridad referencial
+
+Se utilizan restricciones de clave foránea para mantener la integridad de las relaciones entre tablas.
+
+- **ON DELETE RESTRICT:** impide eliminar roles, usuarios, categorías, unidades o ingredientes que estén siendo utilizados por otros registros.
+- **ON DELETE CASCADE:** al eliminar una receta, se eliminan automáticamente sus asociaciones en `RECIPE_INGREDIENTS`, ya que estas no tienen sentido sin la receta correspondiente.
+- **UNIQUE:** evita duplicados en nombres de roles, categorías, unidades e ingredientes, así como en los correos electrónicos.
+- **CHECK:** garantiza que el tamaño familiar, el tiempo de preparación y las cantidades sean valores positivos.
+- **DEFAULT TRUE:** establece que un usuario se encuentra activo por defecto.
+
+## 9. Consideraciones sobre normalización
+
+El modelo se organiza en siete tablas relacionadas mediante claves primarias y foráneas.
+
+- **Primera forma normal (1FN):** los campos contienen valores atómicos y no existen grupos repetidos de atributos.
+- **Segunda forma normal (2FN):** los atributos dependen de la clave primaria completa. En `RECIPE_INGREDIENTS`, la cantidad depende de la combinación de receta e ingrediente.
+- **Tercera forma normal (3FN):** los atributos que no son clave dependen de la clave primaria y no existen dependencias transitivas entre atributos no clave.
+
+La relación muchos a muchos entre recetas e ingredientes se resuelve mediante `RECIPE_INGREDIENTS`, que almacena además el atributo `quantity`.

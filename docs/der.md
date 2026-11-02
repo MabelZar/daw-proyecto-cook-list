@@ -17,16 +17,16 @@ erDiagram
     RECIPES ||--o{ RECIPE_INGREDIENTS : contiene
     INGREDIENTS ||--o{ RECIPE_INGREDIENTS : aparece_en
 
-    ROLES {
+      ROLES {
         BIGINT id PK
-        VARCHAR name UK
+        VARCHAR(100) name UK
     }
 
     USERS {
         BIGINT id PK
-        VARCHAR name
-        VARCHAR email UK
-        VARCHAR password_hash
+        VARCHAR(150) name
+        VARCHAR(255) email UK
+        VARCHAR(255) password_hash
         INTEGER family_size
         DATE birth_date
         BOOLEAN active
@@ -35,18 +35,18 @@ erDiagram
 
     CATEGORY {
         BIGINT id PK
-        VARCHAR name UK
+        VARCHAR(100) name UK
     }
 
     UNITS {
         BIGINT id PK
-        VARCHAR name UK
-        VARCHAR symbol
+        VARCHAR(100) name UK
+        VARCHAR(20) symbol
     }
 
     INGREDIENTS {
         BIGINT id PK
-        VARCHAR name UK
+        VARCHAR(150) name UK
         BIGINT unit_id FK
     }
 
@@ -54,7 +54,7 @@ erDiagram
         BIGINT id PK
         BIGINT user_id FK
         BIGINT category_id FK
-        VARCHAR name
+        VARCHAR(150) name
         TEXT description
         INTEGER preparation_minutes
     }
@@ -62,7 +62,7 @@ erDiagram
     RECIPE_INGREDIENTS {
         BIGINT recipe_id PK, FK
         BIGINT ingredient_id PK, FK
-        NUMERIC quantity
+        NUMERIC(10,2) quantity
     }
 ```
 
