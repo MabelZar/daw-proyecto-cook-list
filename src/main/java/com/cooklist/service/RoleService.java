@@ -1,21 +1,31 @@
 package com.cooklist.service;
 
-import org.springframework.stereotype.Service;
 import java.util.List;
 
-import com.cooklist.model.Role;
+import org.springframework.stereotype.Service;
+
+import com.cooklist.dto.RoleResponseDto;
+import com.cooklist.mapper.RoleMapper;
 import com.cooklist.repository.RoleRepository;
 
 @Service
 public class RoleService {
 
     private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
 
-    public RoleService(RoleRepository roleRepository) {
+    public RoleService(
+            RoleRepository roleRepository,
+            RoleMapper roleMapper) {
+
         this.roleRepository = roleRepository;
+        this.roleMapper = roleMapper;
     }
 
-    public List<Role> findAll() {
-        return roleRepository.findAll();
+    public List<RoleResponseDto> findAll() {
+        return roleRepository.findAll()
+                .stream()
+                .map(roleMapper::toResponseDto)
+                .toList();
     }
 }
