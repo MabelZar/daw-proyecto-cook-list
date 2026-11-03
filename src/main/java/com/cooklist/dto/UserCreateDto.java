@@ -27,10 +27,9 @@ public record UserCreateDto(
     @Positive
     Integer familySize,
 
-    LocalDate birthDate,
+    LocalDate birthDate
 
-    @NotNull
-    Long roleId
+   
 
 ) {
 }

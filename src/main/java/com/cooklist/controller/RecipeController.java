@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.cooklist.dto.RecipeCreateDto;
@@ -23,15 +24,23 @@ public class RecipeController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RecipeResponseDto>> findAll() {
-        return ResponseEntity.ok(recipeService.findAll());
+    public ResponseEntity<List<RecipeResponseDto>> findAll(
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                recipeService.findAll(authentication.getName())
+        );
     }
 
     @PostMapping
     public ResponseEntity<RecipeResponseDto> create(
-            @Valid @RequestBody RecipeCreateDto dto) {
+            @Valid @RequestBody RecipeCreateDto dto,
+            Authentication authentication) {
 
-        RecipeResponseDto createdRecipe = recipeService.create(dto);
+        RecipeResponseDto createdRecipe = recipeService.create(
+                dto,
+                authentication.getName()
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
