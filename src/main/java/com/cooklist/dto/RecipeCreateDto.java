@@ -7,9 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record RecipeCreateDto(
 
-    @NotNull
-    Long userId,
-
+   
     @NotNull
     Long categoryId,
 

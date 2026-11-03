@@ -36,19 +36,35 @@ public class RecipeService {
     }
 
     @Transactional(readOnly = true)
-    public List<RecipeResponseDto> findAll() {
-        return recipeRepository.findAll()
-                .stream()
-                .map(recipeMapper::toResponseDto)
-                .toList();
+public List<RecipeResponseDto> findAll(String email) {
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "El usuario autenticado no existe."
+            ));
+
+    List<Recipe> recipes;
+
+    if ("ADMIN".equals(user.getRole().getName())) {
+        // El administrador puede consultar todas las recetas.
+        recipes = recipeRepository.findAll();
+    } else {
+        // El cliente puede consultar el catálogo y sus propias recetas.
+        recipes = recipeRepository
+                .findAllByUser_Role_NameOrUser_Id("ADMIN", user.getId());
     }
 
-    @Transactional
-    public RecipeResponseDto create(RecipeCreateDto dto) {
+    return recipes.stream()
+            .map(recipeMapper::toResponseDto)
+            .toList();
+}
 
-        User user = userRepository.findById(dto.userId())
+    @Transactional
+    public RecipeResponseDto create(RecipeCreateDto dto, String email) {
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException(
-                    "El usuario indicado no existe."
+                    "El usuario autenticado no existe."
                 ));
 
         Category category = categoryRepository.findById(dto.categoryId())
