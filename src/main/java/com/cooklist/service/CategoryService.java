@@ -1,21 +1,31 @@
 package com.cooklist.service;
 
-import org.springframework.stereotype.Service;
 import java.util.List;
 
-import com.cooklist.model.Category;
+import org.springframework.stereotype.Service;
+
+import com.cooklist.dto.CategoryResponseDto;
+import com.cooklist.mapper.CategoryMapper;
 import com.cooklist.repository.CategoryRepository;
 
 @Service
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(
+            CategoryRepository categoryRepository,
+            CategoryMapper categoryMapper) {
+
         this.categoryRepository = categoryRepository;
+        this.categoryMapper = categoryMapper;
     }
 
-    public List<Category> findAll() {
-        return categoryRepository.findAll();
+    public List<CategoryResponseDto> findAll() {
+        return categoryRepository.findAll()
+                .stream()
+                .map(categoryMapper::toResponseDto)
+                .toList();
     }
 }
