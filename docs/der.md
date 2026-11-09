@@ -70,7 +70,7 @@ erDiagram
 
 - **ROLES — USERS (1:N):** un rol puede estar asignado a varios usuarios. Cada usuario tiene un rol.
 - **USERS — RECIPES (1:N):** un usuario puede crear varias recetas. Cada receta pertenece a un usuario.
-- **CATEGORY — RECIPES (1:N):** una categoría puede clasificar varias recetas. Cada receta pertenece a una categoría.
+- **CATEGORY — RECIPES (1:N):** una categoría puede clasificar varias recetas. Cada receta puede pertenecer a un usuario o ser pública, en cuyo caso no tiene propietario (user_id = NULL). Las recetas privadas tienen un usuario propietario.
 - **UNITS — INGREDIENTS (1:N):** una unidad de medida puede utilizarse en varios ingredientes. Cada ingrediente tiene una unidad de referencia.
 - **RECIPES — INGREDIENTS (M:N):** una receta puede contener varios ingredientes y un ingrediente puede utilizarse en varias recetas. Esta relación se resuelve mediante `RECIPE_INGREDIENTS`.
 
