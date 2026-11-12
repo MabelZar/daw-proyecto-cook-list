@@ -1,4 +1,4 @@
-package com.cooklist.security;
+package com.cooklist.middlewares;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

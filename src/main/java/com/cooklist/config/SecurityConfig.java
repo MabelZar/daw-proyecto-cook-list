@@ -11,8 +11,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.cooklist.security.CustomUserDetailsService;
-import com.cooklist.security.JwtAuthenticationFilter;
+import com.cooklist.middlewares.CustomUserDetailsService;
+import com.cooklist.middlewares.JwtAuthenticationFilter;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -40,8 +42,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
 
-        DaoAuthenticationProvider authProvider =
-                new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
 
         authProvider.setPasswordEncoder(passwordEncoder);
 
@@ -59,19 +60,27 @@ public class SecurityConfig {
             throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(authenticationProvider())
-            .authorizeHttpRequests(auth -> auth
-                 .requestMatchers("/api/auth/**").permitAll()
-                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                 .requestMatchers("/api/roles/**").hasRole("ADMIN")
-                 .requestMatchers("/api/users/**").hasRole("ADMIN")
-                .anyRequest().authenticated())
-            .addFilterBefore(
-                jwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> response.sendError(
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                "No autenticado"))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> response.sendError(
+                                HttpServletResponse.SC_FORBIDDEN,
+                                "Acceso denegado")))
+                .authenticationProvider(authenticationProvider())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers("/api/roles/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

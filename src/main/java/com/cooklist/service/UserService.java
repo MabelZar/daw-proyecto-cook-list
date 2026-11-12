@@ -1,6 +1,7 @@
 package com.cooklist.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -61,5 +62,18 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return userMapper.toResponseDto(savedUser);
+    }
+
+    public UserResponseDto findByEmail(String email) {
+        
+        UserResponseDto userResponseDto = null;
+        
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            userResponseDto = userMapper.toResponseDto(userOpt.get());
+        }
+
+        return userResponseDto;
     }
 }
