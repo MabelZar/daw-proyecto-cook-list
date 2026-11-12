@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.cooklist.model.Recipe;
 import com.cooklist.model.RecipeIngredient;
 import com.cooklist.model.RecipeIngredientId;
 
@@ -14,5 +15,7 @@ public interface RecipeIngredientRepository
             String roleName,
             Long userId
     );
+
+    List<RecipeIngredient> findByRecipe(Recipe recipe);
 
 }

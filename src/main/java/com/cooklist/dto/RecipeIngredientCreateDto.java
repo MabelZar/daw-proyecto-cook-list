@@ -7,9 +7,8 @@ import jakarta.validation.constraints.DecimalMin;
 
 public record RecipeIngredientCreateDto(
 
-    @NotNull
     Long recipeId,
-
+    
     @NotNull
     Long ingredientId,
 
