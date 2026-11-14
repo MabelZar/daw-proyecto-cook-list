@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class RecipeController {
     }
 
     @GetMapping("/find-all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RecipeResponseDto>> findAll(
             Authentication authentication) {
 
@@ -36,6 +38,7 @@ public class RecipeController {
     }
 
     @GetMapping("/find-by-name")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<RecipeResponseDto> getMethodName(@RequestParam @NotEmpty String name) {
 
         List<RecipeResponseDto> recipeResponseDtoList = recipeService.findByNameContaining(name);
@@ -79,7 +82,7 @@ public class RecipeController {
             @NotNull @PathVariable Long id,
             Authentication authentication) {
 
-        recipeService.delete(id);
+        recipeService.delete(id, authentication.getName());
 
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
