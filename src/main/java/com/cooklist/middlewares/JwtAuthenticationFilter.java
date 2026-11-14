@@ -1,4 +1,4 @@
-package com.cooklist.security;
+package com.cooklist.middlewares;
 
 import java.io.IOException;
 
@@ -46,8 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authorizationHeader.substring(7);
 
         try {
-            String email = jwtService.extractEmail(jwt);
-
+            String email = jwtService.extractEmail(jwt);      
             if (email != null
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
 
@@ -65,8 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     userDetails,
                                     null,
                                     userDetails.getAuthorities());
-
-                    authentication.setDetails(
+                                    authentication.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
