@@ -32,6 +32,8 @@ public class CategoryController {
     @GetMapping("/find-all")
     public ResponseEntity<List<CategoryResponseDto>> findAll() {
 
+        LOGGER.info("GET /categories/find-all");
+
         List<CategoryResponseDto> categoryResponseDtoList = categoryService.findAll();
         return ResponseEntity.ok(categoryResponseDtoList);
 
@@ -41,18 +43,22 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CategoryResponseDto>> findByNameContaining(@RequestParam @NotEmpty String name) {
 
+        LOGGER.info("GET /categories/find-by-name?name={}", name);
+
         List<CategoryResponseDto> categoryResponseDtoList = categoryService.findByNameContaining(name);
         return ResponseEntity.ok(categoryResponseDtoList);
 
     }
 
     @GetMapping("/find-by-id")
-    public ResponseEntity<CategoryResponseDto> findById(@RequestParam @NotEmpty Long id) {
+    public ResponseEntity<CategoryResponseDto> findById(@RequestParam @NotNull Long id) {
+
+        LOGGER.info("GET /categories/find-by-id?id={}", id);
 
         try {
 
-            CategoryResponseDto dto = categoryService.findById(id);
-            return ResponseEntity.ok(dto);
+            CategoryResponseDto categoryResponseDto = categoryService.findById(id);
+            return ResponseEntity.ok(categoryResponseDto);
 
         } catch (ResourceNotFoundException e) {
 
@@ -65,11 +71,12 @@ public class CategoryController {
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CategoryResponseDto> create(@Valid @RequestBody CategoryCreateDto dto) {
+    public ResponseEntity<CategoryResponseDto> create(@Valid @RequestBody CategoryCreateDto categoryCreateDto) {
 
-        CategoryResponseDto createdCategory = categoryService.create(dto);
+        LOGGER.info("POST /categories/create");
+        CategoryResponseDto categoryResponseDto = categoryService.create(categoryCreateDto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCategory);
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryResponseDto);
 
     }
 
@@ -78,6 +85,8 @@ public class CategoryController {
     public ResponseEntity update(
             @NotNull @PathVariable Long id,
             @Valid @RequestBody CategoryCreateDto categoryCreateDto) {
+
+        LOGGER.info("PUT /categories/update/{}", id);
 
         try {
 
@@ -96,6 +105,8 @@ public class CategoryController {
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity delete(@NotNull @PathVariable Long id) {
+
+        LOGGER.info("DELETE /categories/delete/{}", id);
 
         categoryService.delete(id);
 
