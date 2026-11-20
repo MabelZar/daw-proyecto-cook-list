@@ -9,6 +9,46 @@ ON CONFLICT (name) DO NOTHING;
 -- EXTENSION PARA CIFRAR CONTRASEÑAS CON BCRYPT
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- USUARIOS INICIALES
+INSERT INTO users (
+    name,
+    email,
+    password_hash,
+    family_size,
+    birth_date,
+    active,
+    role_id
+)
+VALUES
+(
+    'Administrador',
+    'admin@cifpaviles.es',
+    crypt('${ADMIN_PASSWORD}', gen_salt('bf', 12)),
+    1,
+    '1990-01-01',
+    TRUE,
+    (SELECT id FROM roles WHERE name = 'ADMIN')
+),
+(
+    'Usuario 1',
+    'user1@cifpaviles.es',
+    crypt('${USER_PASSWORD}', gen_salt('bf', 12)),
+    2,
+    '2000-01-01',
+    TRUE,
+    (SELECT id FROM roles WHERE name = 'CLIENT')
+),
+(
+    'Usuario 2',
+    'user2@cifpaviles.es',
+    crypt('${USER_PASSWORD}', gen_salt('bf', 12)),
+    3,
+    '2001-01-01',
+    TRUE,
+    (SELECT id FROM roles WHERE name = 'CLIENT')
+)
+ON CONFLICT (email) DO NOTHING;
+
 -- CATEGORIES
 INSERT INTO category (name)
 VALUES
