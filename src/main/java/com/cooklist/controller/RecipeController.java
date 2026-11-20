@@ -11,8 +11,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import com.cooklist.dto.MealPlanRequestDto;
 import com.cooklist.dto.RecipeCreateDto;
 import com.cooklist.dto.RecipeResponseDto;
+import com.cooklist.dto.ShoppingListResponseDto;
 import com.cooklist.service.RecipeService;
 import com.cooklist.util.exception.ResourceNotFoundException;
 
@@ -218,6 +220,27 @@ public class RecipeController {
 
             recipeService.deleteForUser(id, userDetails.getUsername());
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+        } catch (ResourceNotFoundException e) {
+
+            LOGGER.warn(e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+
+        }
+
+    }
+
+    @PostMapping("/calculate-shopping-list")
+    public ResponseEntity<ShoppingListResponseDto> calculateShoppingList(
+            @Valid @RequestBody @NotEmpty List<MealPlanRequestDto> mealPlanRequestDtoList,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        try {
+
+            ShoppingListResponseDto responseDto = recipeService.calculateShoppingList(
+                    mealPlanRequestDtoList,
+                    userDetails.getUsername());
+            return ResponseEntity.ok(responseDto);
 
         } catch (ResourceNotFoundException e) {
 

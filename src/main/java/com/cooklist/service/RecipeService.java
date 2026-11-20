@@ -1,23 +1,30 @@
 package com.cooklist.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cooklist.dto.MealPlanRequestDto;
 import com.cooklist.dto.RecipeCreateDto;
 import com.cooklist.dto.RecipeIngredientCreateDto;
 import com.cooklist.dto.RecipeResponseDto;
+import com.cooklist.dto.RecipeByDateDto;
+import com.cooklist.dto.ShoppingListItemDto;
+import com.cooklist.dto.ShoppingListResponseDto;
 import com.cooklist.mapper.RecipeIngredientMapper;
 import com.cooklist.mapper.RecipeMapper;
 import com.cooklist.model.Category;
 import com.cooklist.model.Ingredient;
 import com.cooklist.model.Recipe;
 import com.cooklist.model.RecipeIngredient;
+import com.cooklist.model.Unit;
 import com.cooklist.model.User;
 import com.cooklist.repository.CategoryRepository;
 import com.cooklist.repository.IngredientRepository;
@@ -273,6 +280,77 @@ public class RecipeService {
         }
 
         return recipeMapper.toResponseDto(recipeUpdated);
+
+    }
+
+    @Transactional(readOnly = true)
+    public ShoppingListResponseDto calculateShoppingList(List<MealPlanRequestDto> mealPlanRequestDtoList, String email)
+            throws ResourceNotFoundException {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
+
+        Integer familySize = user.getFamilySize();
+        if (Objects.isNull(familySize)) {
+            familySize = 1;
+        }
+
+        Map<Long, BigDecimal> consolidatedQuantities = new HashMap<>();
+        Map<Long, Ingredient> ingredientsById = new HashMap<>();
+        List<RecipeByDateDto> recipeByDateList = new ArrayList<>();
+
+        for (MealPlanRequestDto mealPlanRequestDto : mealPlanRequestDtoList) {
+
+            Recipe recipe = recipeRepository.findById(mealPlanRequestDto.recipeId())
+                    .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DOESNT_EXIST));
+
+            RecipeByDateDto recipeByDateDto = new RecipeByDateDto(
+                    mealPlanRequestDto.date(),
+                    recipe.getId(),
+                    recipe.getName());
+            recipeByDateList.add(recipeByDateDto);
+
+            List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
+
+            for (RecipeIngredient recipeIngredient : recipeIngredients) {
+
+                Ingredient ingredient = recipeIngredient.getIngredient();
+                ingredientsById.put(ingredient.getId(), ingredient);
+
+                BigDecimal currentQuantity = consolidatedQuantities.get(ingredient.getId());
+                if (Objects.isNull(currentQuantity)) {
+                    currentQuantity = BigDecimal.ZERO;
+                }
+
+                BigDecimal newQuantity = currentQuantity.add(recipeIngredient.getQuantity());
+                consolidatedQuantities.put(ingredient.getId(), newQuantity);
+
+            }
+
+        }
+
+        List<ShoppingListItemDto> shoppingListItemDtoList = new ArrayList<>();
+
+        for (Long ingredientId : consolidatedQuantities.keySet()) {
+
+            Ingredient ingredient = ingredientsById.get(ingredientId);
+            Unit unit = ingredient.getUnit();
+
+            BigDecimal totalQuantity = consolidatedQuantities.get(ingredientId)
+                    .multiply(BigDecimal.valueOf(familySize));
+
+            ShoppingListItemDto dto = new ShoppingListItemDto(
+                    ingredientId,
+                    ingredient.getName(),
+                    unit.getName(),
+                    unit.getSymbol(),
+                    totalQuantity);
+
+            shoppingListItemDtoList.add(dto);
+
+        }
+
+        return new ShoppingListResponseDto(recipeByDateList, shoppingListItemDtoList);
 
     }
 
