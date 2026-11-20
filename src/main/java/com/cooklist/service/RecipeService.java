@@ -5,10 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.security.access.AccessDeniedException;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import com.cooklist.dto.RecipeCreateDto;
 import com.cooklist.dto.RecipeIngredientCreateDto;
@@ -19,15 +18,14 @@ import com.cooklist.model.Category;
 import com.cooklist.model.Ingredient;
 import com.cooklist.model.Recipe;
 import com.cooklist.model.RecipeIngredient;
-import com.cooklist.model.Role;
 import com.cooklist.model.User;
 import com.cooklist.repository.CategoryRepository;
 import com.cooklist.repository.IngredientRepository;
 import com.cooklist.repository.RecipeIngredientRepository;
 import com.cooklist.repository.RecipeRepository;
 import com.cooklist.repository.UserRepository;
-import com.cooklist.util.DataConstant;
 import com.cooklist.util.MessageConstant;
+import com.cooklist.util.exception.ResourceNotFoundException;
 
 @Service
 public class RecipeService {
@@ -59,13 +57,20 @@ public class RecipeService {
     }
 
     @Transactional(readOnly = true)
-    public List<RecipeResponseDto> findAll(String email) {
+    public List<RecipeResponseDto> findAll() {
+
+        List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
         List<Recipe> recipes = recipeRepository.findAll();
+        if (CollectionUtils.isNotEmpty(recipes)) {
+            for (Recipe recipe : recipes) {
+                RecipeResponseDto dto = recipeMapper.toResponseDto(recipe);
+                recipeDtoList.add(dto);
+            }
+        }
 
-        return recipes.stream()
-                .map(recipeMapper::toResponseDto)
-                .toList();
+        return recipeDtoList;
+
     }
 
     @Transactional(readOnly = true)
@@ -73,9 +78,9 @@ public class RecipeService {
 
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
-        List<Recipe> recipeList = recipeRepository.findByNameContaining(name);
-        if (!CollectionUtils.isEmpty(recipeList)) {
-            for (Recipe recipe : recipeList) {
+        List<Recipe> recipes = recipeRepository.findByNameContaining(name);
+        if (CollectionUtils.isNotEmpty(recipes)) {
+            for (Recipe recipe : recipes) {
                 RecipeResponseDto dto = recipeMapper.toResponseDto(recipe);
                 recipeDtoList.add(dto);
             }
@@ -84,73 +89,201 @@ public class RecipeService {
         return recipeDtoList;
     }
 
-    @Transactional
-    public RecipeResponseDto save(Long id, RecipeCreateDto dto, String email) {
+    @Transactional(readOnly = true)
+    public RecipeResponseDto findById(Long id) throws ResourceNotFoundException {
 
-        boolean isNew = Objects.isNull(id);
+        Optional<Recipe> recipeOpt = recipeRepository.findById(id);
+        Recipe recipe = recipeOpt.orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DONT_EXIST));
+        List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(MessageConstant.USER_DONT_EXIST));
+        RecipeResponseDto recipeResponseDto = recipeMapper.toResponseDto(recipe, recipeIngredients);
 
-        Role role = user.getRole();
+        return recipeResponseDto;
 
-        if (DataConstant.CLIENT_ROLE.equals(role.getName()) && !isNew) {
-            Recipe recipe = recipeRepository.getReferenceById(id);
-            User userOfRecipe = recipe.getUser();
-            if (Objects.isNull(userOfRecipe) || Objects.equals(userOfRecipe, user)) {
-                throw new AccessDeniedException(MessageConstant.DONT_HAVE_PERMISSIONS_TO_THIS_ACTION);
-            }
-        }
-
-        Category category = categoryRepository.findById(dto.categoryId())
-                .orElseThrow(() -> new IllegalArgumentException(MessageConstant.CATEGORY_DONT_EXIST));
-
-        Recipe recipe = recipeMapper.toEntity(
-                id,
-                dto,
-                DataConstant.ADMIN_ROLE.equals(role.getName()) ? null : user,
-                category);
-
-        Recipe savedRecipe = recipeRepository.save(recipe);
-
-        if (!isNew) {
-            List<RecipeIngredient> recipeIngredientList = recipeIngredientRepository.findByRecipe(savedRecipe);
-
-            if (!CollectionUtils.isEmpty(recipeIngredientList)) {
-                recipeIngredientRepository.deleteAll(recipeIngredientList);
-            }
-        }
-
-        for (RecipeIngredientCreateDto ingredientCreateDto : dto.ingredientCreateDtos()) {
-
-            Optional<Ingredient> ingredientOpt = ingredientRepository.findById(ingredientCreateDto.ingredientId());
-            if (ingredientOpt.isPresent()) {
-                RecipeIngredient recipeIngredient = recipeIngredientMapper.toEntity(savedRecipe, ingredientOpt.get(),
-                        ingredientCreateDto.quantity());
-                recipeIngredientRepository.save(recipeIngredient);
-            }
-
-        }
-
-        return recipeMapper.toResponseDto(savedRecipe);
     }
 
     @Transactional
-    public void delete(Long id, String email) {
+    public RecipeResponseDto create(RecipeCreateDto recipeCreateDto) {
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException(MessageConstant.USER_DONT_EXIST));
+        Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
 
-        Role role = user.getRole();
+        Recipe recipe = recipeMapper.toEntity(null, recipeCreateDto, null, category);
 
-        if (DataConstant.CLIENT_ROLE.equals(role.getName())) {
-            Recipe recipe = recipeRepository.getReferenceById(id);
-            User userOfRecipe = recipe.getUser();
-            if (Objects.isNull(userOfRecipe) || Objects.equals(userOfRecipe, user)) {
-                throw new AccessDeniedException(MessageConstant.DONT_HAVE_PERMISSIONS_TO_THIS_ACTION);
+        recipeRepository.save(recipe);
+
+        for (RecipeIngredientCreateDto ingredientCreateDto : recipeCreateDto.ingredientCreateDtos()) {
+
+            Ingredient ingredient = ingredientRepository.getReferenceById(ingredientCreateDto.ingredientId());
+            RecipeIngredient recipeIngredient = recipeIngredientMapper.toEntity(
+                    recipe,
+                    ingredient,
+                    ingredientCreateDto.quantity());
+            recipeIngredientRepository.save(recipeIngredient);
+
+        }
+
+        return recipeMapper.toResponseDto(recipe);
+
+    }
+
+    @Transactional
+    public RecipeResponseDto update(Long id, RecipeCreateDto recipeCreateDto) {
+
+        Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
+
+        Recipe recipe = recipeMapper.toEntity(id, recipeCreateDto, null, category);
+
+        recipeRepository.save(recipe);
+
+        List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
+        recipeIngredients.clear();
+
+        for (RecipeIngredientCreateDto ingredientCreateDto : recipeCreateDto.ingredientCreateDtos()) {
+
+            Ingredient ingredient = ingredientRepository.getReferenceById(ingredientCreateDto.ingredientId());
+            RecipeIngredient recipeIngredient = recipeIngredientMapper.toEntity(
+                    recipe,
+                    ingredient,
+                    ingredientCreateDto.quantity());
+            recipeIngredientRepository.save(recipeIngredient);
+
+        }
+
+        return recipeMapper.toResponseDto(recipe);
+
+    }
+
+    @Transactional
+    public void delete(Long id) {
+
+        recipeRepository.deleteById(id);
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecipeResponseDto> findAllForUser(String email) throws ResourceNotFoundException {
+
+        List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+        List<Recipe> recipes = recipeRepository.findAllByUserOrPublic(user);
+
+        if (CollectionUtils.isNotEmpty(recipes)) {
+            for (Recipe recipe : recipes) {
+                RecipeResponseDto dto = recipeMapper.toResponseDto(recipe);
+                recipeDtoList.add(dto);
             }
         }
 
+        return recipeDtoList;
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecipeResponseDto> findByNameContainingForUser(String name, String email)
+            throws ResourceNotFoundException {
+
+        List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+
+        List<Recipe> recipes = recipeRepository.findByNameContainingAndUserOrPublic(name, user);
+        if (CollectionUtils.isNotEmpty(recipes)) {
+            for (Recipe recipe : recipes) {
+                RecipeResponseDto dto = recipeMapper.toResponseDto(recipe);
+                recipeDtoList.add(dto);
+            }
+        }
+
+        return recipeDtoList;
+    }
+
+    @Transactional(readOnly = true)
+    public RecipeResponseDto findByIdForUser(Long id, String email) throws ResourceNotFoundException {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+        Recipe recipe = recipeRepository.findByIdAndUser(id, user);
+        List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
+
+        RecipeResponseDto recipeResponseDto = recipeMapper.toResponseDto(recipe, recipeIngredients);
+
+        return recipeResponseDto;
+    }
+
+    @Transactional
+    public RecipeResponseDto createForUser(RecipeCreateDto recipeCreateDto, String email)
+            throws ResourceNotFoundException {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+        Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
+
+        Recipe recipe = recipeMapper.toEntity(null, recipeCreateDto, user, category);
+
+        recipeRepository.save(recipe);
+
+        for (RecipeIngredientCreateDto ingredientCreateDto : recipeCreateDto.ingredientCreateDtos()) {
+
+            Ingredient ingredient = ingredientRepository.getReferenceById(ingredientCreateDto.ingredientId());
+            RecipeIngredient recipeIngredient = recipeIngredientMapper.toEntity(
+                    recipe,
+                    ingredient,
+                    ingredientCreateDto.quantity());
+            recipeIngredientRepository.save(recipeIngredient);
+
+        }
+
+        return recipeMapper.toResponseDto(recipe);
+
+    }
+
+    @Transactional
+    public RecipeResponseDto updateForUser(Long id, RecipeCreateDto recipeCreateDto, String email)
+            throws ResourceNotFoundException {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+        if (Objects.isNull(recipeRepository.findByIdAndUser(id, user))) {
+            throw new ResourceNotFoundException(MessageConstant.DONT_HAVE_PERMISSIONS_TO_THIS_ACTION);
+        }
+        Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
+
+        Recipe recipeUpdated = recipeMapper.toEntity(id, recipeCreateDto, user, category);
+
+        recipeRepository.save(recipeUpdated);
+
+        List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipeUpdated);
+        recipeIngredients.clear();
+
+        for (RecipeIngredientCreateDto ingredientCreateDto : recipeCreateDto.ingredientCreateDtos()) {
+
+            Ingredient ingredient = ingredientRepository.getReferenceById(ingredientCreateDto.ingredientId());
+            RecipeIngredient recipeIngredient = recipeIngredientMapper.toEntity(
+                    recipeUpdated,
+                    ingredient,
+                    ingredientCreateDto.quantity());
+            recipeIngredientRepository.save(recipeIngredient);
+
+        }
+
+        return recipeMapper.toResponseDto(recipeUpdated);
+
+    }
+
+    @Transactional
+    public void deleteForUser(Long id, String email) throws ResourceNotFoundException {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+        if (Objects.isNull(recipeRepository.findByIdAndUser(id, user))) {
+            throw new ResourceNotFoundException(MessageConstant.DONT_HAVE_PERMISSIONS_TO_THIS_ACTION);
+        }
+
         recipeRepository.deleteById(id);
+
     }
 
 }
