@@ -14,7 +14,7 @@ import com.cooklist.service.RecipeIngredientService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/recipe-ingredients")
+@RequestMapping("/recipe-ingredients")
 public class RecipeIngredientController {
 
     private final RecipeIngredientService recipeIngredientService;
@@ -29,8 +29,7 @@ public class RecipeIngredientController {
             Authentication authentication) {
 
         return ResponseEntity.ok(
-                recipeIngredientService.findAll(authentication.getName())
-        );
+                recipeIngredientService.findAll(authentication.getName()));
     }
 
     @PostMapping
@@ -38,8 +37,7 @@ public class RecipeIngredientController {
             @Valid @RequestBody RecipeIngredientCreateDto dto,
             Authentication authentication) {
 
-        RecipeIngredientResponseDto created =
-                recipeIngredientService.create(dto, authentication.getName());
+        RecipeIngredientResponseDto created = recipeIngredientService.create(dto, authentication.getName());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

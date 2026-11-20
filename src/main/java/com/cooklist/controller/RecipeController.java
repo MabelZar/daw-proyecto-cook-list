@@ -2,6 +2,8 @@ package com.cooklist.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,9 +21,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 @RestController
-@RequestMapping("/api/recipes")
+@RequestMapping("/recipes")
 public class RecipeController {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(RecipeController.class);
     private final RecipeService recipeService;
 
     public RecipeController(RecipeService recipeService) {
@@ -57,7 +60,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }
@@ -76,19 +79,27 @@ public class RecipeController {
 
     @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RecipeCreateDto> update(
+    public ResponseEntity update(
             @NotNull @PathVariable Long id,
             @Valid @RequestBody RecipeCreateDto recipeCreateDto) {
 
-        recipeService.update(id, recipeCreateDto);
+        try {
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            recipeService.update(id, recipeCreateDto);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+        } catch (ResourceNotFoundException e) {
+
+            LOGGER.warn(e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+
+        }
 
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RecipeResponseDto> delete(@NotNull @PathVariable Long id) {
+    public ResponseEntity delete(@NotNull @PathVariable Long id) {
 
         recipeService.delete(id);
 
@@ -108,7 +119,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }
@@ -129,7 +140,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }
@@ -150,7 +161,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }
@@ -171,7 +182,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }
@@ -179,7 +190,7 @@ public class RecipeController {
     }
 
     @PutMapping("/update-for-user/{id}")
-    public ResponseEntity<RecipeCreateDto> updateForUser(
+    public ResponseEntity updateForUser(
             @NotNull @PathVariable Long id,
             @Valid @RequestBody RecipeCreateDto recipeCreateDto,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -191,7 +202,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }
@@ -199,7 +210,7 @@ public class RecipeController {
     }
 
     @DeleteMapping("/delete-for-user/{id}")
-    public ResponseEntity<RecipeResponseDto> deleteForUser(
+    public ResponseEntity deleteForUser(
             @NotNull @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -210,7 +221,7 @@ public class RecipeController {
 
         } catch (ResourceNotFoundException e) {
 
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage(), e);
             return ResponseEntity.notFound().build();
 
         }

@@ -11,15 +11,14 @@ public class UserMapper {
 
     public UserResponseDto toResponseDto(User user) {
         return new UserResponseDto(
-            user.getId(),
-            user.getName(),
-            user.getEmail(),
-            user.getFamilySize(),
-            user.getBirthDate(),
-            user.getActive(),
-            user.getRole().getId(),
-            user.getRole().getName()
-        );
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getFamilySize(),
+                user.getBirthDate(),
+                user.getActive(),
+                user.getRole().getId(),
+                user.getRole().getName());
     }
 
     public User toEntity(UserCreateDto dto, Role role, String encodedPassword) {
@@ -30,9 +29,9 @@ public class UserMapper {
         user.setPasswordHash(encodedPassword);
         user.setFamilySize(dto.familySize());
         user.setBirthDate(dto.birthDate());
-        user.setActive(true);
         user.setRole(role);
 
         return user;
     }
+
 }

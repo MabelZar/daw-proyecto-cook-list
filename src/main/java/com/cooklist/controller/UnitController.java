@@ -11,7 +11,7 @@ import com.cooklist.dto.UnitResponseDto;
 import com.cooklist.service.UnitService;
 
 @RestController
-@RequestMapping("/api/units")
+@RequestMapping("/units")
 public class UnitController {
 
     private final UnitService unitService;

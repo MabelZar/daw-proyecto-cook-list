@@ -92,8 +92,8 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public RecipeResponseDto findById(Long id) throws ResourceNotFoundException {
 
-        Optional<Recipe> recipeOpt = recipeRepository.findById(id);
-        Recipe recipe = recipeOpt.orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DONT_EXIST));
+        Recipe recipe = recipeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DOESNT_EXIST));
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
 
         RecipeResponseDto recipeResponseDto = recipeMapper.toResponseDto(recipe, recipeIngredients);
@@ -127,7 +127,10 @@ public class RecipeService {
     }
 
     @Transactional
-    public RecipeResponseDto update(Long id, RecipeCreateDto recipeCreateDto) {
+    public RecipeResponseDto update(Long id, RecipeCreateDto recipeCreateDto) throws ResourceNotFoundException {
+
+        recipeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DOESNT_EXIST));
 
         Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
 
@@ -166,7 +169,7 @@ public class RecipeService {
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
         List<Recipe> recipes = recipeRepository.findAllByUserOrPublic(user);
 
         if (CollectionUtils.isNotEmpty(recipes)) {
@@ -187,7 +190,7 @@ public class RecipeService {
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
 
         List<Recipe> recipes = recipeRepository.findByNameContainingAndUserOrPublic(name, user);
         if (CollectionUtils.isNotEmpty(recipes)) {
@@ -204,7 +207,7 @@ public class RecipeService {
     public RecipeResponseDto findByIdForUser(Long id, String email) throws ResourceNotFoundException {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
         Recipe recipe = recipeRepository.findByIdAndUser(id, user);
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
 
@@ -218,7 +221,7 @@ public class RecipeService {
             throws ResourceNotFoundException {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
         Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
 
         Recipe recipe = recipeMapper.toEntity(null, recipeCreateDto, user, category);
@@ -245,7 +248,7 @@ public class RecipeService {
             throws ResourceNotFoundException {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
         if (Objects.isNull(recipeRepository.findByIdAndUser(id, user))) {
             throw new ResourceNotFoundException(MessageConstant.DONT_HAVE_PERMISSIONS_TO_THIS_ACTION);
         }
@@ -277,7 +280,7 @@ public class RecipeService {
     public void deleteForUser(Long id, String email) throws ResourceNotFoundException {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DONT_EXIST));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
         if (Objects.isNull(recipeRepository.findByIdAndUser(id, user))) {
             throw new ResourceNotFoundException(MessageConstant.DONT_HAVE_PERMISSIONS_TO_THIS_ACTION);
         }

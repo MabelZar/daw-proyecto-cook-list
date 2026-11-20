@@ -11,7 +11,7 @@ import com.cooklist.dto.IngredientResponseDto;
 import com.cooklist.service.IngredientService;
 
 @RestController
-@RequestMapping("/api/ingredients")
+@RequestMapping("/ingredients")
 public class IngredientController {
 
     private final IngredientService ingredientService;
