@@ -2,6 +2,7 @@ package com.cooklist.mapper;
 
 import org.springframework.stereotype.Component;
 import com.cooklist.dto.UserResponseDto;
+import com.cooklist.dto.UserAdminCreateDto;
 import com.cooklist.dto.UserCreateDto;
 import com.cooklist.model.User;
 import com.cooklist.model.Role;
@@ -22,6 +23,19 @@ public class UserMapper {
     }
 
     public User toEntity(UserCreateDto dto, Role role, String encodedPassword) {
+        User user = new User();
+
+        user.setName(dto.name());
+        user.setEmail(dto.email());
+        user.setPasswordHash(encodedPassword);
+        user.setFamilySize(dto.familySize());
+        user.setBirthDate(dto.birthDate());
+        user.setRole(role);
+
+        return user;
+    }
+
+    public User toEntity(UserAdminCreateDto dto, Role role, String encodedPassword) {
         User user = new User();
 
         user.setName(dto.name());

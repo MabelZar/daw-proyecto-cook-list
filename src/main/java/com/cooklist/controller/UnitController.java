@@ -2,6 +2,8 @@ package com.cooklist.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,14 +16,20 @@ import com.cooklist.service.UnitService;
 @RequestMapping("/units")
 public class UnitController {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(UnitController.class);
     private final UnitService unitService;
 
     public UnitController(UnitService unitService) {
         this.unitService = unitService;
     }
 
-    @GetMapping
+    @GetMapping("/find-all")
     public ResponseEntity<List<UnitResponseDto>> findAll() {
-        return ResponseEntity.ok(unitService.findAll());
+
+        LOGGER.info("GET /units/find-all");
+
+        List<UnitResponseDto> unitResponseDtoList = unitService.findAll();
+        return ResponseEntity.ok(unitResponseDtoList);
+
     }
 }

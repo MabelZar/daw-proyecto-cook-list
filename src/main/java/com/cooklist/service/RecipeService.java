@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,8 @@ import com.cooklist.util.exception.ResourceNotFoundException;
 
 @Service
 public class RecipeService {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(RecipeService.class);
 
     private final RecipeRepository recipeRepository;
     private final UserRepository userRepository;
@@ -66,6 +70,8 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public List<RecipeResponseDto> findAll() {
 
+        LOGGER.info("Buscando todas las recetas");
+
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
         List<Recipe> recipes = recipeRepository.findAll();
@@ -83,6 +89,8 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public List<RecipeResponseDto> findByNameContaining(String name) {
 
+        LOGGER.info("Buscando recetas cuyo nombre contiene '{}'", name);
+
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
         List<Recipe> recipes = recipeRepository.findByNameContaining(name);
@@ -99,6 +107,8 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public RecipeResponseDto findById(Long id) throws ResourceNotFoundException {
 
+        LOGGER.info("Buscando la receta con id {}", id);
+
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DOESNT_EXIST));
         List<RecipeIngredient> recipeIngredients = recipeIngredientRepository.findByRecipe(recipe);
@@ -111,6 +121,8 @@ public class RecipeService {
 
     @Transactional
     public RecipeResponseDto create(RecipeCreateDto recipeCreateDto) {
+
+        LOGGER.info("Creando una receta nueva");
 
         Category category = categoryRepository.getReferenceById(recipeCreateDto.categoryId());
 
@@ -135,6 +147,8 @@ public class RecipeService {
 
     @Transactional
     public RecipeResponseDto update(Long id, RecipeCreateDto recipeCreateDto) throws ResourceNotFoundException {
+
+        LOGGER.info("Actualizando la receta con id {}", id);
 
         recipeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.RECIPE_DOESNT_EXIST));
@@ -166,12 +180,16 @@ public class RecipeService {
     @Transactional
     public void delete(Long id) {
 
+        LOGGER.info("Borrando la receta con id {}", id);
+
         recipeRepository.deleteById(id);
 
     }
 
     @Transactional(readOnly = true)
     public List<RecipeResponseDto> findAllForUser(String email) throws ResourceNotFoundException {
+
+        LOGGER.info("Buscando todas las recetas del usuario {}", email);
 
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
@@ -194,6 +212,8 @@ public class RecipeService {
     public List<RecipeResponseDto> findByNameContainingForUser(String name, String email)
             throws ResourceNotFoundException {
 
+        LOGGER.info("Buscando recetas con nombre '{}' para el usuario {}", name, email);
+
         List<RecipeResponseDto> recipeDtoList = new ArrayList<>();
 
         User user = userRepository.findByEmail(email)
@@ -213,6 +233,8 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public RecipeResponseDto findByIdForUser(Long id, String email) throws ResourceNotFoundException {
 
+        LOGGER.info("Buscando la receta {} para el usuario {}", id, email);
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
         Recipe recipe = recipeRepository.findByIdAndUser(id, user);
@@ -226,6 +248,8 @@ public class RecipeService {
     @Transactional
     public RecipeResponseDto createForUser(RecipeCreateDto recipeCreateDto, String email)
             throws ResourceNotFoundException {
+
+        LOGGER.info("Creando receta para el usuario {}", email);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
@@ -253,6 +277,8 @@ public class RecipeService {
     @Transactional
     public RecipeResponseDto updateForUser(Long id, RecipeCreateDto recipeCreateDto, String email)
             throws ResourceNotFoundException {
+
+        LOGGER.info("Actualizando la receta {} del usuario {}", id, email);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
@@ -286,6 +312,8 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public ShoppingListResponseDto calculateShoppingList(List<MealPlanRequestDto> mealPlanRequestDtoList, String email)
             throws ResourceNotFoundException {
+
+        LOGGER.info("Calculando la lista de la compra del usuario {}", email);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));
@@ -356,6 +384,8 @@ public class RecipeService {
 
     @Transactional
     public void deleteForUser(Long id, String email) throws ResourceNotFoundException {
+
+        LOGGER.info("Borrando la receta {} del usuario {}", id, email);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageConstant.USER_DOESNT_EXIST));

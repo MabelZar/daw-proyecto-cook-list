@@ -1,5 +1,7 @@
 package com.cooklist.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,6 +14,8 @@ import com.cooklist.dto.UserResponseDto;
 
 @Service
 public class AuthService {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -42,11 +46,23 @@ public class AuthService {
 
         UserResponseDto userResponseDto = userService.findByEmail(loginRequest.email());
 
+        LOGGER.info("Login correcto para el usuario {}", loginRequest.email());
+
         return new LoginResponseDto(
                 token,
                 "Bearer",
                 expiration,
                 userResponseDto
         );
+    }
+
+    /** Invalida el token que llega en el header Authorization para cerrar sesión. */
+    public void logout(String authHeader) {
+
+        String token = authHeader.substring(7);
+
+        jwtService.revokeToken(token);
+
+        LOGGER.info("Logout realizado");
     }
 }

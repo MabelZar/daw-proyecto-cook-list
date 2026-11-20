@@ -37,6 +37,8 @@ public class RecipeController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RecipeResponseDto>> findAll() {
 
+        LOGGER.info("GET /recipes/find-all");
+
         List<RecipeResponseDto> recipeResponseDtoList = recipeService.findAll();
         return ResponseEntity.ok(recipeResponseDtoList);
 
@@ -46,6 +48,8 @@ public class RecipeController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RecipeResponseDto>> findByNameContaining(@RequestParam @NotEmpty String name) {
 
+        LOGGER.info("GET /recipes/find-by-name?name={}", name);
+
         List<RecipeResponseDto> recipeResponseDtoList = recipeService.findByNameContaining(name);
         return ResponseEntity.ok(recipeResponseDtoList);
 
@@ -53,12 +57,14 @@ public class RecipeController {
 
     @GetMapping("/find-by-id")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RecipeResponseDto> findById(@RequestParam @NotEmpty Long id) {
+    public ResponseEntity<RecipeResponseDto> findById(@RequestParam @NotNull Long id) {
+
+        LOGGER.info("GET /recipes/find-by-id?id={}", id);
 
         try {
 
-            RecipeResponseDto dto = recipeService.findById(id);
-            return ResponseEntity.ok(dto);
+        RecipeResponseDto recipeResponseDto = recipeService.findById(id);
+        return ResponseEntity.ok(recipeResponseDto);
 
         } catch (ResourceNotFoundException e) {
 
@@ -71,11 +77,12 @@ public class RecipeController {
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RecipeResponseDto> create(@Valid @RequestBody RecipeCreateDto dto) {
+    public ResponseEntity<RecipeResponseDto> create(@Valid @RequestBody RecipeCreateDto recipeCreateDto) {
 
-        RecipeResponseDto createdRecipe = recipeService.create(dto);
+        LOGGER.info("POST /recipes/create");
+        RecipeResponseDto recipeResponseDto = recipeService.create(recipeCreateDto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdRecipe);
+        return ResponseEntity.status(HttpStatus.CREATED).body(recipeResponseDto);
 
     }
 
@@ -84,6 +91,8 @@ public class RecipeController {
     public ResponseEntity update(
             @NotNull @PathVariable Long id,
             @Valid @RequestBody RecipeCreateDto recipeCreateDto) {
+
+        LOGGER.info("PUT /recipes/update/{}", id);
 
         try {
 
@@ -103,6 +112,8 @@ public class RecipeController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity delete(@NotNull @PathVariable Long id) {
 
+        LOGGER.info("DELETE /recipes/delete/{}", id);
+
         recipeService.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -112,6 +123,8 @@ public class RecipeController {
     @GetMapping("/find-all-for-user")
     public ResponseEntity<List<RecipeResponseDto>> findAllForUser(
             @AuthenticationPrincipal UserDetails userDetails) {
+
+        LOGGER.info("GET /recipes/find-all-for-user ({})", userDetails.getUsername());
 
         try {
 
@@ -133,6 +146,8 @@ public class RecipeController {
             @RequestParam @NotEmpty String name,
             @AuthenticationPrincipal UserDetails userDetails) {
 
+        LOGGER.info("GET /recipes/find-by-name-for-user?name={} ({})", name, userDetails.getUsername());
+
         try {
 
             List<RecipeResponseDto> recipeResponseDtoList = recipeService.findByNameContainingForUser(
@@ -151,15 +166,17 @@ public class RecipeController {
 
     @GetMapping("/find-by-id-for-user")
     public ResponseEntity<RecipeResponseDto> findByIdForUser(
-            @RequestParam @NotEmpty Long id,
+            @RequestParam @NotNull Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
+
+        LOGGER.info("GET /recipes/find-by-id-for-user?id={} ({})", id, userDetails.getUsername());
 
         try {
 
-            RecipeResponseDto dto = recipeService.findByIdForUser(
+            RecipeResponseDto recipeResponseDto = recipeService.findByIdForUser(
                     id,
                     userDetails.getUsername());
-            return ResponseEntity.ok(dto);
+            return ResponseEntity.ok(recipeResponseDto);
 
         } catch (ResourceNotFoundException e) {
 
@@ -172,15 +189,16 @@ public class RecipeController {
 
     @PostMapping("/create-for-user")
     public ResponseEntity<RecipeResponseDto> createForUser(
-            @Valid @RequestBody RecipeCreateDto dto,
+            @Valid @RequestBody RecipeCreateDto recipeCreateDto,
             @AuthenticationPrincipal UserDetails userDetails) {
 
         try {
 
-            RecipeResponseDto createdRecipe = recipeService.createForUser(
-                    dto,
+            LOGGER.info("POST /recipes/create-for-user ({})", userDetails.getUsername());
+            RecipeResponseDto recipeResponseDto = recipeService.createForUser(
+                    recipeCreateDto,
                     userDetails.getUsername());
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdRecipe);
+            return ResponseEntity.status(HttpStatus.CREATED).body(recipeResponseDto);
 
         } catch (ResourceNotFoundException e) {
 
@@ -196,6 +214,8 @@ public class RecipeController {
             @NotNull @PathVariable Long id,
             @Valid @RequestBody RecipeCreateDto recipeCreateDto,
             @AuthenticationPrincipal UserDetails userDetails) {
+
+        LOGGER.info("PUT /recipes/update-for-user/{} ({})", id, userDetails.getUsername());
 
         try {
 
@@ -216,6 +236,8 @@ public class RecipeController {
             @NotNull @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
 
+        LOGGER.info("DELETE /recipes/delete-for-user/{} ({})", id, userDetails.getUsername());
+
         try {
 
             recipeService.deleteForUser(id, userDetails.getUsername());
@@ -235,12 +257,14 @@ public class RecipeController {
             @Valid @RequestBody @NotEmpty List<MealPlanRequestDto> mealPlanRequestDtoList,
             @AuthenticationPrincipal UserDetails userDetails) {
 
+        LOGGER.info("POST /recipes/calculate-shopping-list ({})", userDetails.getUsername());
+
         try {
 
-            ShoppingListResponseDto responseDto = recipeService.calculateShoppingList(
+            ShoppingListResponseDto shoppingListResponseDto = recipeService.calculateShoppingList(
                     mealPlanRequestDtoList,
                     userDetails.getUsername());
-            return ResponseEntity.ok(responseDto);
+            return ResponseEntity.ok(shoppingListResponseDto);
 
         } catch (ResourceNotFoundException e) {
 
