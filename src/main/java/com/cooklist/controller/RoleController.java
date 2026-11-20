@@ -11,7 +11,7 @@ import com.cooklist.dto.RoleResponseDto;
 import com.cooklist.service.RoleService;
 
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/roles")
 public class RoleController {
 
     private final RoleService roleService;
